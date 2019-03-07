@@ -1,6 +1,8 @@
 #ifndef MATRIZ_H
 #define MATRIZ_H
 
+#pragma warning (disable: 4244)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -160,7 +162,7 @@ public:
 	
 	void matrizInversa(){
 		Matrix m = gerarMatrix();
-		m = !m;
+		m = !m; // Profiling the CPU during runtime using high triangle count meshes shows this as the bottleneck (over 99% of computation time). Needs replacement.
 		this->atualizarValores(m);
 		
 		/*int n = this->linhas;

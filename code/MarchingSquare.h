@@ -5,6 +5,9 @@
 #include <vector>
 #include "Ponto.h"
 
+#pragma warning (disable: 4244)
+
+
 using namespace std;
 
 class MarchingSquare{
@@ -53,6 +56,7 @@ public:
 		return retorno;
 	}
 
+	// Get Border Points
 	vector<Ponto*> pegarPontosBorda(){
 		Ponto pontoTemp = Ponto(0,0);
 		int x;
@@ -101,7 +105,7 @@ public:
 		
 		std::vector<Ponto*> retorno;
 		int indice = 0;
-		int fator = (int)borda.size()*0.015;//Configura aqui o intervalo de pontos a serem pegos da borda.
+		int fator = (int)borda.size()*0.008;//Configura aqui o intervalo de pontos a serem pegos da borda.
 		for(int i = 0; i < (int)borda.size();i = i+fator){
 			retorno.push_back(new Ponto(borda[i].pX,borda[i].pY,indice));
 			indice++;

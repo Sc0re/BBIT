@@ -1,6 +1,8 @@
 #ifndef VETOR_H
 #define VETOR_H
 
+#pragma warning (disable: 4244)
+
 #include "Ponto.h"
 #include <math.h>
 

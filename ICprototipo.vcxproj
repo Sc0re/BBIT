@@ -15,6 +15,7 @@
     <ProjectGuid>{CC517AFF-8482-4655-BE48-523B377BD384}</ProjectGuid>
     <RootNamespace>ProjetoIC</RootNamespace>
     <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -45,13 +46,15 @@
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Matthew Garvey\Dropbox\body image\codigo Diego\glut;C:\Users\Matthew Garvey\Dropbox\body image\codigo Diego\devil1.6.8-rc2\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Matthew Garvey\Dropbox\body image\codigo Diego\glut;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\glut;$(SolutionDir)\devil1.6.8-rc2\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\devil1.6.8-rc2\lib;$(SolutionDir)\glut;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\Matt\Dropbox\BBIT\imgui;$(SolutionDir)\imgui;$(SolutionDir)\glui;$(SolutionDir)\freeglut\include\GL;$(SolutionDir)\glut;$(SolutionDir)\devil1.6.8-rc2\include;$(SolutionDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\BBIT\freeglut\bin;$(SolutionDir)\devil1.6.8-rc2\lib;$(SolutionDir)\freeglut\lib;$(SolutionDir)\glut;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -66,7 +69,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\Users\dlam\Desktop\ICultimaVersao\glui;C:\Users\dlam\Desktop\ICultimaVersao\glut;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\glui;$(SolutionDir)\glut;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -91,14 +94,28 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention />
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>$(SolutionDir)\glui;$(SolutionDir)\glut;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freeglut.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BodyPart.cpp" />
+    <ClCompile Include="code\ImguiManipulationState.cpp" />
+    <ClCompile Include="code\ImguiSetupState.cpp" />
     <ClCompile Include="code\main.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_impl_freeglut.cpp" />
+    <ClCompile Include="imgui\imgui_impl_opengl2.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BodyPart.h" />
     <ClInclude Include="code\AuxMatrizMethods.h" />
     <ClInclude Include="code\Controlador.h" />
+    <ClInclude Include="code\ImguiManipulationState.h" />
+    <ClInclude Include="code\ImguiSetupState.h" />
     <ClInclude Include="code\InicializadorTriangulos.h" />
     <ClInclude Include="code\Inpainting.h" />
     <ClInclude Include="code\MarchingSquare.h" />
@@ -108,11 +125,32 @@
     <ClInclude Include="code\Textura.h" />
     <ClInclude Include="code\Triangulo.h" />
     <ClInclude Include="code\Vetor.h" />
+    <ClInclude Include="freeglut\include\GL\freeglut.h" />
+    <ClInclude Include="freeglut\include\GL\freeglut_ext.h" />
+    <ClInclude Include="freeglut\include\GL\freeglut_std.h" />
+    <ClInclude Include="freeglut\include\GL\glut.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_impl_freeglut.h" />
+    <ClInclude Include="imgui\imgui_impl_opengl2.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\imstb_rectpack.h" />
+    <ClInclude Include="imgui\imstb_textedit.h" />
+    <ClInclude Include="imgui\imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="devil1.6.8-rc2\lib\DevIL.lib" />
     <Library Include="devil1.6.8-rc2\lib\ILU.lib" />
     <Library Include="devil1.6.8-rc2\lib\ILUT.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="imgui\.editorconfig" />
+    <None Include="imgui\.travis.yml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="imgui\LICENSE.txt" />
+    <Text Include="misc.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

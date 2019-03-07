@@ -1,11 +1,16 @@
 #ifndef INICIALIZADORTRIANGULOS_H
 #define INICIALIZADORTRIANGULOS_H
 
+#pragma warning (disable: 4244)
+#pragma warning (disable: 4305)
+
 #include <vector>
 #include <time.h>
 #include <math.h>
 #include <iostream>
 #include <fstream>
+
+#include "MarchingSquare.h"
 
 class InicializadorTriangulos{
 public:  

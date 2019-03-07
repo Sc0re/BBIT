@@ -5,6 +5,11 @@
 #include "Pontos.h"
 #include "InicializadorTriangulos.h"
 
+/*
+		NOTE: The naming scheme for the functions in this header file are based off of Igarashi's paper.
+		      Use that for reference when attempting to understand the matrix functions.
+*/
+
 class Controlador{
 public:
 	Pontos *pontos;
@@ -24,6 +29,7 @@ public:
 
 	bool withScaleAdjust;
 	
+//               screen width     screen height                                 percentage of points
 Controlador (int tamanhoTelaX, int tamanhoTelaY,unsigned char *imagePixels, double porcentagemPontos, bool loadObj, char* nomeObj) {
 	this->withScaleAdjust = false;
 	this->tamanhoTelaX = tamanhoTelaX;
@@ -56,11 +62,13 @@ void inicializar(){
 	this->hTemp = new Matriz(0,0);
 }
 
+// Change screen size
 void mudarTamanhoTela(int w,int h){
 	tamanhoTelaX = w;
 	tamanhoTelaY = h;
 }
 
+// Restart Controller
 void reiniciarControlador(){
 	vector<Ponto*> pontosAntigos;
 	for(int i = 0; i < (int)this->pontos->pontos.size();i++){
@@ -416,6 +424,11 @@ void calcularMovimentoEtapa3(){
 	pontos->atualizarPontosLivres(HinvCopia->valores);
 	delete DCopia;
 	delete HinvCopia;
+}
+
+Pontos getPoints()
+{
+	return *pontos;
 }
 
 };

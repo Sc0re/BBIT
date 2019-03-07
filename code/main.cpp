@@ -1,44 +1,85 @@
+// Image Loading
 #include "il/il.h"
 #include "il/ilu.h"
 #include "il/ilut.h"
+
+// Standard Libraries
 #include <stdio.h>
 #include <stdlib.h>
-#include "glut.h"
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <math.h>
+#include <sstream>
+
+// Diego's Headers
 #include "MarchingSquare.h"
 #include "Controlador.h"
 #include "Inpainting.h"
-#include <sstream>
-//#include "glui.h"
-#include <algorithm>
+
+// Imgui and OpenGL bindings
+#include "imgui.h"
+#include "imgui_impl_freeglut.h"
+#include "imgui_impl_opengl2.h"
+#include "freeglut.h"
+#include "ImguiSetupState.h"
+#include "ImguiManipulationState.h"
+
+#ifdef _MSC_VER
+#pragma warning (disable: 4505) // unreferenced local function has been removed
+#endif
+#pragma warning (disable: 4244)
+
+// Definitions for UI state for rendering logic
+#define UI_SETUP 0
+#define UI_MANIP 1
+
+static bool show_user_interface = true;
+static ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
+static char ui_state = UI_SETUP;
+BBIT::ImguiSetupState ui_Setup;
+BBIT::ImguiManipulationState ui_Manipulation;
 
 using namespace std;
  
+/*
+	Callbacks
+	---------
+	exibeCB:     "display        callback"
+	tecladoCB:   "keyboard       callback"
+	redesenhaDB: "redesign       callback"
+	mouseCB:     "mouse          callback"
+	mouseMovCB:  "mouse movement callback"
+	mouseMov:    "another move   callback" ???
+*/
 void exibeCB( void );
 void tecladoCB( unsigned char tecla, int x, int y );
 void redesenhaCB( int w, int h );
+void mouseCB(int botao, int estado, int x, int y);
+void mouseMovCB(int x, int y);
+void mouseMov(int x, int y);
+
+// Resource Initialization
 void inic( void );
-void mouseCB( int botao, int estado, int x, int y );
-void mouseMovCB( int x, int y);
-void mouseMov( int x, int y);
+
+//   carregarTexturas: "Load Textures"
 bool carregarTexturas(char* imagem);
-//void controlGUI( int control );
-//void gerarGui();
+//   salvarImagem:     "Save Image"
 void salvarImagem(string path);
+//   criarOBJ:         "Create Object"
 void criarOBJ(char* imagem);
 
 Controlador *controlador;
 Inpainting inp;
-int tamanhoTelaX = 800;
-int tamanhoTelaY = 600;
+int tamanhoTelaX = 1800;
+int tamanhoTelaY = 900;
 
 //imagem
 ILuint texid[2];
 GLuint image[2];
 
-//controle
+// controle
+// movimentando: "movement"
 bool movimentando = false;
 
 int xMouse;
@@ -47,12 +88,13 @@ int yMouse;
 int xSelect;
 int ySelect;
 
-//GLUI
+// GLUI -- GLUI is unused, but some of these are necessary regardless of usage.
 int main_window;
 int contImage = 0;
-bool debug=true;
+bool debug=true;    // when debug is true, triangles are drawn
 bool folderChoose;
 
+// These are unused. Inpainting is disabled.
 bool inpaintOn=false;
 float centroInpX=0;
 float centroInpY=0;
@@ -60,24 +102,28 @@ float mouseInpX=0;
 float mouseInpY=0;
 vector<Triangulo> inpTriangulos;
 
-//GLUI_EditText   *txtFolder;
-//GLUI_EditText   *txtAtualImage;
-//GLUI_EditText   *txtPorcPontos;
-
 int main( int argc, char *argv[] ){
 	glutInit( &argc, argv );
 	glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
 	inic();
-	//gerarGui();
+
+	// Main Rendering Loop
 	glutMainLoop();
-	return 1;
+
+	// Cleanup of ImGui resources
+	ImGui_ImplOpenGL2_Shutdown();
+	ImGui_ImplFreeGLUT_Shutdown();
+	ImGui::DestroyContext();
+
+	return 0;
 }
 
 void inic( void ){
 
+	// FreeGLUT configuration
 	glutInitWindowSize(tamanhoTelaX,tamanhoTelaY);
 	glutInitWindowPosition( 0, 0 );
-	main_window = glutCreateWindow( "Protótipo" );
+	main_window = glutCreateWindow( "B-BIT: Brazilian Body Image Tool" );
 	glutDisplayFunc( exibeCB );
 	glutKeyboardFunc( tecladoCB );
 	glutReshapeFunc( redesenhaCB );
@@ -85,15 +131,31 @@ void inic( void ){
 	glutMotionFunc( mouseMovCB );
 	glutPassiveMotionFunc( mouseMov );
 	
+	// OpenGL configuration
 	glClearColor( 0, 0, 0, 0 );
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 	glClear( GL_COLOR_BUFFER_BIT );
+
+	// Setup Dear ImGui context, style, 
+	// and platform/renderer bindings
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsLight();
+	ImGui_ImplFreeGLUT_Init();
+	ImGui_ImplFreeGLUT_InstallFuncs();
+	ImGui_ImplOpenGL2_Init();
 	
+	// Inpainting is unused in this implementation, kept for buildability
 	inp = Inpainting();
 
+	/*
+		TODO: replace the command-line inputs with the load function in the UI.
+
+		It will be necessary to rewrite a fair amount of this function so that it initializes properly.
+	*/
 	string nomeImagem = string("");
 	cout << "Digite o nome da imagem:";
 	cin >> nomeImagem;
@@ -124,14 +186,23 @@ void inic( void ){
 		controlador->pontos->pontos[i]->calcularTextura(ilGetInteger(IL_IMAGE_WIDTH),ilGetInteger(IL_IMAGE_HEIGHT));
 	}
 	if(!lerObj)criarOBJ((char*)nomeObj.c_str());
+
+
 }
- 
+ /*
+	Load Textures
+	=============
+	Loads the image with DevIL, binds it to id 0.
+	Attempts to load from ../imagens/
+
+	This may have to be moved and generalized to the UI function for loading images.
+ */
 bool carregarTexturas(char* imagem){
 	string textura = string("imagens/")+string(imagem);
 	ilInit();
 	ilGenImages(2, texid);
 	ilBindImage(texid[0]);
-	if (!ilLoadImage((char*)textura.c_str()) ){
+	if (!ilLoadImage((const wchar_t*)textura.c_str()) ){
 		cout << "Imagem inexistente." << endl;
 		return false;
 	}
@@ -142,18 +213,13 @@ bool carregarTexturas(char* imagem){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH),ilGetInteger(IL_IMAGE_HEIGHT), 0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,ilGetData());
-
-	/*ilBindImage(texid[1]);
-	ilLoadImage("triangulo.gif");
-	ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
-	glBindTexture(GL_TEXTURE_2D, image[1]); 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), tamanhoTelaX,tamanhoTelaY, 0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE,ilGetData());*/
 	
 	return true;
 }
 
+/*
+	GLUI is not to be used in this implementation, but the code is left here for reference (image loading, primarily).
+*/
 /*void gerarGui(){
 	GLUI *glui = GLUI_Master.create_glui( "TG", 0, 811, 0 );
 
@@ -195,7 +261,7 @@ void controlGUI( int control ){
 	else if(control == 3){// escolher folder
 		if (!folderChoose){
 			string pasta  = string("..\\imagens\\Projetos\\") + txtFolder->text;
-			CreateDirectory((char*)pasta.c_str(),NULL);
+			CreateDirectory((const wchar_t*)pasta.c_str(),NULL);
 			txtFolder->disable();
 		}
 		folderChoose = !folderChoose;
@@ -223,9 +289,21 @@ void controlGUI( int control ){
 	glutPostRedisplay();
 }*/
 
+//                button     state  x coord y coord
 void mouseCB( int botao, int estado, int x, int y ){
-	if(!inpaintOn){
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)x, (float)y);
+	int button = -1;
+	if (botao == GLUT_LEFT_BUTTON) button = 0;
+	if (botao == GLUT_RIGHT_BUTTON) button = 1;
+	if (botao == GLUT_MIDDLE_BUTTON) button = 2;
+	if (button != -1 && estado == GLUT_DOWN)
+		io.MouseDown[button] = true;
+	if (button != -1 && estado == GLUT_UP)
+		io.MouseDown[button] = false;
 
+	// Manual Point Controlling w/ Mouse 3
+	if(!inpaintOn && botao == GLUT_MIDDLE_BUTTON){
 		xMouse = x;
 		yMouse = y;
 		y = controlador->tamanhoTelaY -1 -y;
@@ -259,10 +337,17 @@ void mouseCB( int botao, int estado, int x, int y ){
 	glutPostRedisplay();
 }
 void mouseMovCB( int x, int y){
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)x, (float)y);
+
+	// The following section is disabled due to bad interactions with the UI, and the fact that
+	// the image should not be manipulated directly. It is left here for reference.
+	/*
 	double dxi = x - xMouse;
 	double dyi = y - yMouse;
 	double di = sqrt(((double) (dxi*dxi) + (dyi*dyi)) );
-	if(di > 25){
+	int threshold = 2; // Increasing this will increase the distance the mouse must travel to morph the object
+	if(di > threshold){
 		y = controlador->tamanhoTelaY -1 -y;
 		//movimentos de translação
 		float movX = x - controlador->pontos->pontos[controlador->pontos->pontoSelecionado]->pX;
@@ -278,18 +363,58 @@ void mouseMovCB( int x, int y){
 				}
 			}
 		}else controlador->calcularMovimento();
-		glutPostRedisplay();
+		
 	}
+	*/
+	glutPostRedisplay();
 }
-
 void exibeCB( void ){
-
-	glClearColor( 0, 0, 0, 0 );
-	glClear( GL_COLOR_BUFFER_BIT );
-
+	
+	bool renderUI = true;
+	if (renderUI)
+	{
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL2_NewFrame();
+		ImGui_ImplFreeGLUT_NewFrame();
+		switch (ui_state)
+		{
+		case UI_SETUP:
+		{
+			if (ui_Setup.setupComplete)
+			{
+				ui_state = UI_MANIP;
+				ui_Manipulation.showUI(&show_user_interface);
+				break;
+			}
+			else if (!ui_Setup.setupComplete)
+			{
+				ui_Setup.showUI(&show_user_interface);
+				break;
+			}
+			break;
+		}
+		case UI_MANIP:
+		{
+			ui_Manipulation.showUI(&show_user_interface);
+			break;
+		}
+		}
+		// Rendering
+		ImGui::Render();
+		ImGuiIO& io = ImGui::GetIO();
+		glViewport(0, 0, (GLsizei)io.DisplaySize.x, (GLsizei)io.DisplaySize.y);
+		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+		glClear(GL_COLOR_BUFFER_BIT);
+		ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+		//glClearColor( 0, 0, 0, 0 );
+		//glClear( GL_COLOR_BUFFER_BIT );
+	}
+	
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, image[0]); 
 	
+	// The following is messy garbage and I hate it; I damn Diego eternally for writing it this way. It's also stupid legacy GL. Lots of stupid.
+
 	for(int i = 0; i < (int)controlador->triangulos.size();i++){
 		glBegin(GL_TRIANGLES);
 			glTexCoord2f(controlador->triangulos[i]->p0->textura->tX,controlador->triangulos[i]->p0->textura->tY);glVertex2f(controlador->triangulos[i]->p0->pX,controlador->triangulos[i]->p0->pY);
@@ -308,6 +433,7 @@ void exibeCB( void ){
 
 	glDisable(GL_TEXTURE_2D);
 
+	// Draw the triangle frame 
 	if (debug){
 		for(int i = 0; i < (int)controlador->triangulos.size();i++){
 				glBegin(GL_LINE_LOOP);
@@ -326,6 +452,8 @@ void exibeCB( void ){
 				glEnd();
 		}
 	}
+
+	// Size and drawing of control points
 	glPointSize(8);
 	for(int i = 0; i < (int)controlador->pontos->pontos.size();i++){
 		if(controlador->pontos->isPontoControle(i)){
@@ -350,10 +478,14 @@ void exibeCB( void ){
 	}
 
     glutSwapBuffers();
+	//glutPostRedisplay();
 	glFlush();
 }
-
 void mouseMov( int x, int y){
+	// ImGui Mouse Movement Functions
+	ImGuiIO& io = ImGui::GetIO();
+	io.MousePos = ImVec2((float)x, (float)y);
+
 	if(inpaintOn){
 		y = controlador->tamanhoTelaY -1 -y;
 		mouseInpX=x;
@@ -366,9 +498,58 @@ void mouseMov( int x, int y){
 	}
 	glutPostRedisplay();
 }
-
 void tecladoCB( unsigned char tecla, int x, int y ){
+	/*
+	==================================================================================================================================
+	|                                                            IMGUI                                                               |
+	==================================================================================================================================
+	*/
+	// Send character to imgui
+	//printf("char_down_func %d '%c'\n", c, c);
+	ImGuiIO& io = ImGui::GetIO();
+	if (tecla >= 32)
+		io.AddInputCharacter((unsigned short)tecla);
+
+	// Store letters in KeysDown[] array as both uppercase and lowercase + Handle GLUT translating CTRL+A..CTRL+Z as 1..26.
+	// This is a hacky mess but GLUT is unable to distinguish e.g. a TAB key from CTRL+I so this is probably the best we can do here.
+	if (tecla >= 1 && tecla <= 26)
+		io.KeysDown[tecla] = io.KeysDown[tecla - 1 + 'a'] = io.KeysDown[tecla - 1 + 'A'] = true;
+	else if (tecla >= 'a' && tecla <= 'z')
+		io.KeysDown[tecla] = io.KeysDown[tecla - 'a' + 'A'] = true;
+	else if (tecla >= 'A' && tecla <= 'Z')
+		io.KeysDown[tecla] = io.KeysDown[tecla - 'A' + 'a'] = true;
+	else
+		io.KeysDown[tecla] = true;
+	//ImGuiIO& io = ImGui::GetIO();
+	int mods = glutGetModifiers();
+	io.KeyCtrl = (mods & GLUT_ACTIVE_CTRL) != 0;
+	io.KeyShift = (mods & GLUT_ACTIVE_SHIFT) != 0;
+	io.KeyAlt = (mods & GLUT_ACTIVE_ALT) != 0;
+	(void)x; (void)y; // Unused
+
+	//=================================================================================================================================
+
 	y = controlador->tamanhoTelaY -1 -y;
+
+	/*
+	    ------------------------------------------
+		|               Keybinds                 |
+		------------------------------------------
+		z: Debug          (draw logical triangles)
+		d: Select a point   (???)(Possibly Unused)
+		f:               (???, Inpainting related)
+		i:               (???, Inpainting related)
+		c:               (???, Inpainting related)
+		v:               (???, Inpainting related)
+		s:               (???, Inpainting related)
+		p:               (Enable Inpainting, etc.)
+	*/
+
+	if(tecla == 'z')
+	{
+		debug = !debug;
+	}
+	/*
 	if(tecla=='d'){
 		xSelect = x;
 		ySelect = y;
@@ -458,19 +639,25 @@ void tecladoCB( unsigned char tecla, int x, int y ){
 		}
 		//inp.poligono.clear();
 	}
-
+	*/
 	glutPostRedisplay();
 }
+
+// Window resize callback
 void redesenhaCB( int w, int h ){
 	glViewport( 0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	controlador->mudarTamanhoTela(w,h);
 	gluOrtho2D( 0, controlador->tamanhoTelaX, 0, controlador->tamanhoTelaY);
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplaySize = ImVec2((float)w, (float)h);
 }
 
+// Save Image? 
 void salvarImagem(string path){
-	//lendo os pixels da tela atraves do opengl
+	// Read the screen pixels via OGL
 	unsigned char *temp = new unsigned char[tamanhoTelaX * tamanhoTelaY * 4];
 	glReadPixels(0, 0, tamanhoTelaX, tamanhoTelaY, GL_RGBA, GL_UNSIGNED_BYTE, temp);
 	
@@ -491,19 +678,18 @@ void salvarImagem(string path){
 	
 	//contador da imagem
 	
-	//nome da imagem
+	// Image Name
 	stringstream contador;
 	contador << ++contImage;
-	
-	//nome da imagem
 	string nome = path + contador.str() + string(".jpg");
-	ilSaveImage((char*)nome.c_str());
+	ilSaveImage((const wchar_t*)nome.c_str());
 
 	delete temp;
 	delete pixels;
 	glutPostRedisplay();
 }
 
+// Creates Object (.obj) file based on the calculated geometry
 void criarOBJ(char* imagem){
 	string dirArquivo = string("..//Obj//")+string(imagem)+string(".obj");
 	ofstream out((char*)dirArquivo.c_str());

@@ -1,6 +1,8 @@
 #ifndef TRIANGULO_H
 #define TRIANGULO_H
 
+#pragma warning (disable: 4244)
+
 #include "Vetor.h"
 #include "Matriz.h"
 

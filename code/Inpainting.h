@@ -6,6 +6,11 @@
 #include <fstream>
 #include "Vetor.h"
 
+/*
+    NOTE: Inpainting is not pertinent to this project. It is left here because the project will not build without it.
+	TODO: Strip all inpainting related code from this project.
+*/
+
 using namespace std;
 
 class Inpainting{
