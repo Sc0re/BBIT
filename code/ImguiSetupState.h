@@ -2,6 +2,10 @@
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+// Image Loading
+#include "il/il.h"
+#include "il/ilu.h"
+#include "il/ilut.h"
 
 #include "imgui.h"
 #include <ctype.h>          // toupper, isprint
@@ -12,6 +16,7 @@
 #include <cstdlib>			// rand
 #include <string>	        // string
 #include <iostream>         // cout
+#include <vector>           // vector
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
 #include <stddef.h>         // intptr_t
 #else
@@ -91,6 +96,7 @@ namespace BBIT
 	private:
 		ImGuiWindowFlags window_flags = 0;
 		ImGuiWindowFlags setup_panel_flags = 0;
+		std::vector<GLuint> refImgIDs;
 		bool mainMenuBarVisible;
 		bool userInputPanelVisible;
 		bool inputDataVisible;
@@ -104,6 +110,6 @@ namespace BBIT
 		void showMenuFile();
 		void showUserInputPanel(bool* p_open);
 		void showFileWindow(bool* p_open);
-		
+		void loadSetupRefImgs();
 	};
 }

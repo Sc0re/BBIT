@@ -1,3 +1,0 @@
-1: Create a body part object
-2: Assign the controller in use to the object
-3: Assign boundary points

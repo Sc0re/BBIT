@@ -53,7 +53,7 @@
 
 namespace BBIT
 {
-	enum class STEP_ID
+	enum class STEP_ID2
 	{
 		ARM_UPPER_RIGHT_LATERAL,
 		ARM_UPPER_RIGHT_MEDIAL,
@@ -101,6 +101,6 @@ namespace BBIT
 		void showUserInputPanel(bool* p_open);
 		//void showInputData(bool* p_open); // TODO: Move to new class post-manipulation
 		void showMenuFile();
-		void morphBodyPart(BBIT::STEP_ID id, int percentage);
+		void morphBodyPart(BBIT::STEP_ID2 id, int percentage);
 	};
 }

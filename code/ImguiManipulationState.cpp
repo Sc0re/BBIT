@@ -1,6 +1,6 @@
 #include "ImguiManipulationState.h"
 
-ImguiManipulationState::ImguiManipulationState()
+BBIT::ImguiManipulationState::ImguiManipulationState()
 {
 	window_flags |= ImGuiWindowFlags_MenuBar;
 	manip_panel_flags |= ImGuiWindowFlags_NoCollapse;
@@ -11,11 +11,11 @@ ImguiManipulationState::ImguiManipulationState()
 	show_app_style_editor = false;
 	show_app_about = false;
 }
-ImguiManipulationState::~ImguiManipulationState()
+BBIT::ImguiManipulationState::~ImguiManipulationState()
 {
 }
 
-void ImguiManipulationState::showUI(bool* p_open)
+void BBIT::ImguiManipulationState::showUI(bool* p_open)
 {
 	if (mainMenuBarVisible) showMainMenuBar(&mainMenuBarVisible);
 	if (userInputPanelVisible) showUserInputPanel(&userInputPanelVisible);
@@ -33,7 +33,7 @@ void ImguiManipulationState::showUI(bool* p_open)
 		ImGui::End();
 	}
 }
-void ImguiManipulationState::showMainMenuBar(bool* p_open)
+void BBIT::ImguiManipulationState::showMainMenuBar(bool* p_open)
 {
 	static bool shown_once_already = false;
 	if (!shown_once_already)
@@ -92,7 +92,7 @@ void ImguiManipulationState::showMainMenuBar(bool* p_open)
 		ImGui::EndMainMenuBar();
 	}
 }
-void ImguiManipulationState::showMenuFile()
+void BBIT::ImguiManipulationState::showMenuFile()
 {
 	if (ImGui::MenuItem("New"))
 	{
@@ -116,7 +116,7 @@ void ImguiManipulationState::showMenuFile()
 
 	if (ImGui::MenuItem("Quit", "Esc")) { shutdownState = true; } // WIP
 }
-void ImguiManipulationState::showUserInputPanel(bool* p_open)
+void BBIT::ImguiManipulationState::showUserInputPanel(bool* p_open)
 {
 	if (!ImGui::Begin("", p_open, manip_panel_flags))
 	{
@@ -367,6 +367,6 @@ void ImguiManipulationState::showUserInputPanel(bool* p_open)
 	Adjusts the body part defined by its STEP_ID.
 	Change is dependent on which button is pressed. (+/-)
 */
-void BBIT::ImguiManipulationState::morphBodyPart(BBIT::STEP_ID id, int percentage)
+void BBIT::ImguiManipulationState::morphBodyPart(BBIT::STEP_ID2 id, int percentage)
 {
 }
